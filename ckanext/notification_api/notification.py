@@ -51,6 +51,16 @@ def remove_notification(context, data_dict):
     #session.add(info)
     session.commit()
     return {"status":"success"} 
+@ckan.logic.side_effect_free
+def reactivate_notification(context, data_dict):
+    create_notificatio_api(context)
+    info = db.NotificationAPI.get(**data_dict)
+    info[0].status = 'active'
+    info[0].save()
+    session = context['session']
+    #session.add(info)
+    session.commit()
+    return {"status":"success"} 
 
 def valid_dataset_id(dataset_id):
     dataset =  model.Session.query(model.Package).filter(model.Package.id == dataset_id).first()
@@ -61,7 +71,7 @@ def valid_resource_id(resource_id):
 def valid_apikey(API_key):
     return model.Session.query(model.User).filter(model.User.apikey == API_key).first() != None
 def user_id(API_key):
-    return model.Session.query(model.User).filter(model.User.apikey == API_key).first().name
+    return model.Session.query(model.User).filter(model.User.apikey == API_key).first().id
 def in_db(datadict, context):
     create_notificatio_api(context)
     contains = db.NotificationAPI.get(**datadict)
@@ -98,15 +108,17 @@ class NotificationController(base.BaseController):
         logging.warning(c.author)
         apikey =  self._get_apikey() #"11148c41-e328-492d-82a2-8af393063c0e" #
         rid = base.request.params.get("rid","")
-        adr = base.request.params.get("adr","")
-        
-        if  (valid_dataset_id(rid) or valid_resource_id(rid)) and valid_apikey(apikey):
+        adr = base.request.params.get("url","")
+        logging.warning("apikey:")
+        logging.warning(adr)
+        if  (valid_dataset_id(rid) or valid_resource_id(rid)) and apikey != None:
             data_dict = {"dataset_id": rid, "ip":adr, "user_id":user_id(apikey)}
             logging.warning("data_dict:")
             logging.warning(data_dict)
             logging.warning(in_db(data_dict, context))
             if in_db(data_dict,context):
                 resp = json.dumps({"help": "response","sucess":False, "result": "222 already in the database", }, encoding='utf8')
+                reactivate_notification(context, data_dict)
             else:
                 new_notification(context, data_dict)
                 resp = json.dumps({"help": "response","sucess":True, "result": "subscribed", "ip":c.remote_addr, }, encoding='utf8')
@@ -123,7 +135,7 @@ class NotificationController(base.BaseController):
                    'for_view': True}
         apikey =  self._get_apikey() #"11148c41-e328-492d-82a2-8af393063c0e" #
         rid = base.request.params.get("rid","")
-        adr = base.request.params.get("adr","")
+        adr = base.request.params.get("url","")
         
         if  (valid_dataset_id(rid) or valid_resource_id(rid)) and valid_apikey(apikey):
             data_dict = {"dataset_id": rid, "ip":adr, "user_id":user_id(apikey)}
