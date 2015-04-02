@@ -41,6 +41,16 @@ def new_notification(context, data_dict):
     session.add(info)
     session.commit()
     return {"status":"success"} 
+@ckan.logic.side_effect_free
+def remove_notification(context, data_dict):
+    create_notificatio_api(context)
+    info = db.NotificationAPI.get(**data_dict)
+    info.status = 'inactive'
+    info.save()
+    session = context['session']
+    session.add(info)
+    session.commit()
+    return {"status":"success"} 
 
 def valid_dataset_id(dataset_id):
     dataset =  model.Session.query(model.Package).filter(model.Package.id == dataset_id).first()
@@ -86,11 +96,11 @@ class NotificationController(base.BaseController):
                    'for_view': True}
         logging.warning("IP adress or logged user")
         logging.warning(c.author)
-        apikey =  self._get_apikey() #"0c63f0ee-7f70-4f37-9559-5ca84ac9a16f" #
+        apikey =  self._get_apikey() #"11148c41-e328-492d-82a2-8af393063c0e" #
         rid = base.request.params.get("rid","")
         adr = base.request.params.get("adr","")
         
-        if  (valid_dataset_id(rid) or valid_resource_id(rid)) and apikey!= None:
+        if  (valid_dataset_id(rid) or valid_resource_id(rid)) and valid_apikey(apikey):
             data_dict = {"dataset_id": rid, "ip":adr, "user_id":user_id(apikey)}
             logging.warning("data_dict:")
             logging.warning(data_dict)
@@ -107,7 +117,31 @@ class NotificationController(base.BaseController):
                 resp = json.dumps({"help": "response","sucess":False, "result": "111 invalid apikey", "ip":c.remote_addr, }, encoding='utf8')
         return resp
 
-
+    def unsubscribe(self):
+        context = {'model': model, 'session': model.Session,
+                   'user': c.user or c.author, 'auth_user_obj': c.userobj,
+                   'for_view': True}
+        apikey =  self._get_apikey() #"0c63f0ee-7f70-4f37-9559-5ca84ac9a16f" #
+        rid = base.request.params.get("rid","")
+        adr = base.request.params.get("adr","")
+        
+        if  (valid_dataset_id(rid) or valid_resource_id(rid)) and valid_apikey(apikey):
+            data_dict = {"dataset_id": rid, "ip":adr, "user_id":user_id(apikey)}
+            logging.warning("data_dict:")
+            logging.warning(data_dict)
+            logging.warning(in_db(data_dict, context))
+            if in_db(data_dict,context):
+                unsubscribe(context, data_dict)
+                resp = json.dumps({"help": "response","sucess":False, "result": "0 unsubscribed", }, encoding='utf8')
+            else:
+                
+                resp = json.dumps({"help": "response","sucess":True, "result": "10", "ip":c.remote_addr, }, encoding='utf8')
+        else:
+            if apikey!= None: 
+                resp = json.dumps({"help": "response","sucess":False, "result": "404 dataset not found", "ip":c.remote_addr, }, encoding='utf8')
+            else:
+                resp = json.dumps({"help": "response","sucess":False, "result": "111 invalid apikey", "ip":c.remote_addr, }, encoding='utf8')
+        return resp
         
     def kiirat(self):
         url = send_notification("ac8a662d-7e57-4fd1-ade4-bb757fbea53f", "majom")
