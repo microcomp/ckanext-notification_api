@@ -133,10 +133,10 @@ class NotificationController(base.BaseController):
             data_dict2 = {"dataset_id": rid, "ip":adr}
             if in_db(data_dict2,context):
                 remove_notification(context, data_dict2)
-                resp = json.dumps({"help": "response","sucess":False, "result": "0 unsubscribed", }, encoding='utf8')
+                resp = json.dumps({"help": "response","sucess":True, "result": "0 unsubscribed", }, encoding='utf8')
             else:
                 
-                resp = json.dumps({"help": "response","sucess":True, "result": "10", "ip":c.remote_addr, }, encoding='utf8')
+                resp = json.dumps({"help": "response","sucess":False, "result": "10", "ip":c.remote_addr, }, encoding='utf8')
         else:
             if apikey!= None: 
                 resp = json.dumps({"help": "response","sucess":False, "result": "404 dataset not found", "ip":c.remote_addr, }, encoding='utf8')
