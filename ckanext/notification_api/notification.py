@@ -45,10 +45,10 @@ def new_notification(context, data_dict):
 def remove_notification(context, data_dict):
     create_notificatio_api(context)
     info = db.NotificationAPI.get(**data_dict)
-    info.status = 'inactive'
-    info.save()
+    info[0].status = 'inactive'
+    info[0].save()
     session = context['session']
-    session.add(info)
+    #session.add(info)
     session.commit()
     return {"status":"success"} 
 
@@ -121,7 +121,7 @@ class NotificationController(base.BaseController):
         context = {'model': model, 'session': model.Session,
                    'user': c.user or c.author, 'auth_user_obj': c.userobj,
                    'for_view': True}
-        apikey =  self._get_apikey() #"0c63f0ee-7f70-4f37-9559-5ca84ac9a16f" #
+        apikey =  self._get_apikey() #"11148c41-e328-492d-82a2-8af393063c0e" #
         rid = base.request.params.get("rid","")
         adr = base.request.params.get("adr","")
         
@@ -130,8 +130,9 @@ class NotificationController(base.BaseController):
             logging.warning("data_dict:")
             logging.warning(data_dict)
             logging.warning(in_db(data_dict, context))
-            if in_db(data_dict,context):
-                unsubscribe(context, data_dict)
+            data_dict2 = {"dataset_id": rid, "ip":adr}
+            if in_db(data_dict2,context):
+                remove_notification(context, data_dict2)
                 resp = json.dumps({"help": "response","sucess":False, "result": "0 unsubscribed", }, encoding='utf8')
             else:
                 
