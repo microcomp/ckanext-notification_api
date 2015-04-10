@@ -157,7 +157,7 @@ class NotificationController(base.BaseController):
         return resp
         
     def kiirat(self):
-        url = send_notification("ac8a662d-7e57-4fd1-ade4-bb757fbea53f", "majom")
+        url = send_notification("ac8a662d-7e57-4fd1-ade4-bb757fbea53f", "test")
         return base.render('kiirat.html')
 
 def send_notification(dataset_id, status):
