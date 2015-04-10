@@ -167,7 +167,8 @@ def send_notification(dataset_id, status):
                    'for_view': True}
     create_notificatio_api(context)
     ips = db.NotificationAPI.get(**data_dict)
-    logging.warning(ips)
+    logging.warning("/////starting...///////")
+    #logging.warning(ips)
     resp = json.dumps({"help": "notification", "result": dataset_id+" "+status,  }, encoding='utf8')
     for i in ips:
         #i.ip
@@ -177,5 +178,5 @@ def send_notification(dataset_id, status):
         html = response.read()
         logging.warning(html)
         logging.warning(path)
-        return path
+        #return path
         #done...
