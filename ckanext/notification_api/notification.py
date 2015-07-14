@@ -111,13 +111,16 @@ class NotificationController(base.BaseController):
         adr = base.request.params.get("url","")
         logging.warning("apikey:")
         logging.warning(adr)
+        logging.warning(valid_dataset_id(rid));
+        logging.warning(valid_resource_id(rid));
+        logging.warning("----------------------------------------------------------------------------")
         if  (valid_dataset_id(rid) or valid_resource_id(rid)) and apikey != None:
             data_dict = {"dataset_id": rid, "ip":adr, "user_id":user_id(apikey)}
             logging.warning("data_dict:")
             logging.warning(data_dict)
             logging.warning(in_db(data_dict, context))
             if in_db(data_dict,context):
-                resp = json.dumps({"help": "response","sucess":False, "result": "222 already in the database", }, encoding='utf8')
+                resp = json.dumps({"help": "response","sucess":False, "result": "subscribed", }, encoding='utf8')
                 reactivate_notification(context, data_dict)
             else:
                 new_notification(context, data_dict)
@@ -136,7 +139,9 @@ class NotificationController(base.BaseController):
         apikey =  self._get_apikey() #"11148c41-e328-492d-82a2-8af393063c0e" #
         rid = base.request.params.get("rid","")
         adr = base.request.params.get("url","")
-        
+        logging.warning(valid_dataset_id(rid));
+        logging.warning(valid_resource_id(rid));
+        logging.warning("----------------------------------------------------------------------------")
         if  (valid_dataset_id(rid) or valid_resource_id(rid)) and valid_apikey(apikey):
             data_dict = {"dataset_id": rid, "ip":adr, "user_id":user_id(apikey)}
             logging.warning("data_dict:")
@@ -166,17 +171,19 @@ def send_notification(dataset_id, status):
                    'user': c.user or c.author, 'auth_user_obj': c.userobj,
                    'for_view': True}
     create_notificatio_api(context)
-    ips = db.NotificationAPI.get(**data_dict)
-    logging.warning("/////starting...///////")
-    #logging.warning(ips)
-    resp = json.dumps({"help": "notification", "result": dataset_id+" "+status,  }, encoding='utf8')
-    for i in ips:
-        #i.ip
-        path = i.ip+"?dataset_id="+i.dataset_id+"&status="+status
-        response = urllib2.urlopen(path)
-        logging.warning("/////cccc///////")
-        html = response.read()
-        logging.warning(html)
-        logging.warning(path)
-        #return path
-        #done...
+
+    if db.notification_api_table.exists():
+        ips = db.NotificationAPI.get(**data_dict)
+        logging.warning("/////starting...///////")
+        resp = json.dumps({"help": "notification", "result": dataset_id+" "+status,  }, encoding='utf8')
+        for i in ips:
+
+            path = i.ip+"?dataset_id="+i.dataset_id+"&status="+status
+            try:
+                response = urllib2.urlopen(path)
+                logging.warning("/////cccc///////")
+                html = response.read()
+                logging.warning(html)
+                logging.warning(path)
+            except ValueError:
+                logging.warning("wrong url")

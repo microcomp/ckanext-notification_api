@@ -27,11 +27,12 @@ class NotificationApiPlugin(plugins.SingletonPlugin):
 
     def notify(self, entity, operation=None):
         context = {'model': model, 'ignore_auth': True}
+        
         if isinstance(entity, model.Resource):
             if not operation:
                 return
             elif operation == DomainObjectOperation.changed:
-                logging.warning('\n\n\n\n\n\n majom')
+                logging.warning('\n\n\n\n\n\n')
                 logging.warning(entity.id)
                 logging.warning('\n\n\n\n\n\n')
                 notification.send_notification(entity.id, 'updated')
