@@ -121,7 +121,7 @@ class NotificationController(base.BaseController):
             logging.warning(data_dict)
             logging.warning(in_db(data_dict, context))
             if in_db(data_dict,context):
-                resp = json.dumps({"help": "response","sucess":False, "result": "subscribedsh ", }, encoding='utf8')
+                resp = json.dumps({"help": "response","sucess":False, "result": "subscribed", }, encoding='utf8')
                 reactivate_notification(context, data_dict)
             else:
                 new_notification(context, data_dict)
