@@ -10,21 +10,17 @@ from ckan.model.extension import ObserverNotifier
 from ckan.model.domain_object import DomainObjectOperation
 
 class NotificationApiPlugin(plugins.SingletonPlugin):
-    plugins.implements(plugins.IConfigurer)
-    plugins.implements(plugins.IRoutes, inherit=True)
+
+    plugins.implements(plugins.interfaces.IActions)
     plugins.implements(plugins.ITemplateHelpers, inherit=False)
     plugins.implements(plugins.IDomainObjectModification, inherit=True)
-    def before_map(self, map):
-        map.connect('sign_up','/custom_api/notification/subscribe', action='sign_up', controller='ckanext.notification_api.notification:NotificationController')
-        map.connect('unsubscribe','/custom_api/notification/unsubscribe', action='unsubscribe', controller='ckanext.notification_api.notification:NotificationController')
-        
-        return map
+
     def get_helpers(self):
         return {'send_notification': notification.send_notification}
 
-    def update_config(self, config):
-        toolkit.add_template_directory(config, 'templates')
-
+    def get_actions(self):
+        return {'sign_up':notification.sign_up,
+                'unsubscribe': notification.unsubscribe}
     def notify(self, entity, operation=None):
         context = {'model': model, 'ignore_auth': True}
         
