@@ -24,7 +24,8 @@ setup(
     ],
     entry_points='''
         [ckan.plugins]
-        # Add plugins here, e.g.
         notification_api=ckanext.notification_api.plugin:NotificationApiPlugin
+        [ckan.celery_task]
+        tasks = ckanext.notification_api.celery_import:task_imports
     ''',
 )
