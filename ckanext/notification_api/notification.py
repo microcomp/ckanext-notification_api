@@ -1,9 +1,7 @@
-import urllib
+import urllib2
+import json
+import logging
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-import uuid
-import datetime
 import ckan.model as model
 import ckan.logic as logic
 import ckan.lib.base as base
@@ -13,70 +11,65 @@ import ckan.plugins as p
 from pylons import config, request, response
 from ckan.common import _, c
 import ckan.plugins.toolkit as toolkit
-import urllib2
-import logging
-import ckan.logic
-import __builtin__
 
-import db
-import json
+from db import notification_table, NotificationApi
+
 _check_access = logic.check_access
 
+def create_notification_table():
+    if not notification_table.exists():
+        notification_table.create()
 
-def create_notificatio_api(context):
-    if db.notification_api_table is None:
-        db.init_db(context['model'])
-@ckan.logic.side_effect_free
+def get_dataset_followers(dataset_id):
+    create_notification_table()
+    search = {'dataset_id': dataset_id, 'status':'active'}
+    results = NotificationApi.get(**search)
+    res = []
+    for entity in results:
+        res.append({'address' : entity.ip_address, 'user' : entity.user_id})
+    return res
+
+@logic.side_effect_free
 def new_notification(context, data_dict):
-    create_notificatio_api(context)
-    info = db.NotificationAPI()
+    create_notification_table()
+    info = NotificationApi()
     info.user_id = data_dict['user_id']
     info.dataset_id = data_dict['dataset_id']
-    info.ip = data_dict['ip']
-
+    info.ip = data_dict['ip_address']
     info.save()
-    session = context['session']
-    session.add(info)
-    session.commit()
-    return {"status":"success"} 
-@ckan.logic.side_effect_free
+    return {"status":"success"}
+ 
+@logic.side_effect_free
 def remove_notification(context, data_dict):
-    create_notificatio_api(context)
-    info = db.NotificationAPI.get(**data_dict)
+    create_notification_table()
+    info = NotificationApi.get(**data_dict)
     info[0].status = 'inactive'
     info[0].save()
-    session = context['session']
-    #session.add(info)
-    session.commit()
-    return {"status":"success"} 
-@ckan.logic.side_effect_free
+    return {"status":"success"}
+ 
+@logic.side_effect_free
 def reactivate_notification(context, data_dict):
-    create_notificatio_api(context)
-    info = db.NotificationAPI.get(**data_dict)
+    create_notification_table(context)
+    info = NotificationApi.get(**data_dict)
     info[0].status = 'active'
     info[0].save()
-    session = context['session']
-    #session.add(info)
-    session.commit()
     return {"status":"success"} 
 
 def valid_dataset_id(dataset_id):
     dataset =  model.Session.query(model.Package).filter(model.Package.id == dataset_id).first()
     return dataset != None
+
 def valid_resource_id(resource_id):
     dataset =  model.Session.query(model.Resource).filter(model.Resource.id == resource_id).first()
     return dataset != None
-def valid_apikey(API_key):
-    return model.Session.query(model.User).filter(model.User.apikey == API_key).first() != None
-def user_id(API_key):
-    return model.Session.query(model.User).filter(model.User.apikey == API_key).first().id
-def in_db(datadict, context):
-    create_notificatio_api(context)
-    contains = db.NotificationAPI.get(**datadict)
+
+def in_db(datadict):
+    create_notification_table()
+    contains = NotificationApi.get(**datadict)
     logging.warning(contains)
     return len(contains) >= 1
 
-@toolkit.side_effect_free
+@logic.side_effect_free
 def sign_up(context, data_dict):
 
     '''Sign up for notifications. Parameters: rid (valid dataset/resource id), url'''
@@ -104,7 +97,7 @@ def sign_up(context, data_dict):
 
     data_dict2 = {"dataset_id": rid, "ip":adr, "user_id":context['auth_user_obj'].id}
     
-    __in_db = in_db(data_dict2, context)
+    __in_db = in_db(data_dict2)
 
     if __in_db:
         resp = {"info": "reactivated/already exists in database"}
@@ -118,7 +111,6 @@ def sign_up(context, data_dict):
 @toolkit.side_effect_free
 def unsubscribe(context, data_dict):
     ''' Unsubscribe API'''
-    #apikey =  self._get_apikey() #"11148c41-e328-492d-82a2-8af393063c0e" #
     if context['auth_user_obj'] == None:
         raise logic.NotAuthorized
     try:
@@ -139,7 +131,7 @@ def unsubscribe(context, data_dict):
         raise logic.ValidationError(ed)
 
     data_dict2 = {"dataset_id": rid, "ip":adr, "user_id":context['auth_user_obj'].id}
-    if in_db(data_dict2,context):
+    if in_db(data_dict2):
         remove_notification(context, data_dict2)
         resp = {"info": "unsubscribed" }
     else:
@@ -147,15 +139,11 @@ def unsubscribe(context, data_dict):
         raise logic.ValidationError(ed)
     
     return resp
-class NotificationController(base.BaseController):
-    pass
 
 def send_notification(dataset_id, status):
     data_dict = {'dataset_id': dataset_id, 'status':'active'}
-    context = {'model': model, 'session': model.Session,
-                   'user': c.user or c.author, 'auth_user_obj': c.userobj,
-                   'for_view': True}
-    create_notificatio_api(context)
+    context = {'model': model}
+    create_notification_table(context)
     ##try:
     if db.notification_api_table.exists():
         ips = db.NotificationAPI.get(**data_dict)
