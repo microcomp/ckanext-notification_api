@@ -19,8 +19,8 @@ class NotificationApiPlugin(plugins.SingletonPlugin):
         return {'send_notification': notification.send_notification}
 
     def get_actions(self):
-        return {'sign_up':notification.sign_up,
-                'unsubscribe': notification.unsubscribe}
+        return {'notification_subscribe':notification.sign_up,
+                'notification_unsubscribe': notification.unsubscribe}
     def notify(self, entity, operation=None):
         context = {'model': model, 'ignore_auth': True}
         
