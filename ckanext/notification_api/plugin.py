@@ -1,41 +1,42 @@
+import logging
+import json
+import uuid
+
 import ckan.plugins as plugins
-import notification
 import ckan.plugins.toolkit as toolkit
 import ckan.model as model
-from ckan.plugins import IMapper, IDomainObjectModification
-
-import logging
-
-from ckan.model.extension import ObserverNotifier
 from ckan.model.domain_object import DomainObjectOperation
+from ckan.lib.celery_app import celery
+from pylons import config
+
+import notification
+
+log = logging.getLogger(__name__)
 
 class NotificationApiPlugin(plugins.SingletonPlugin):
-    plugins.implements(plugins.IConfigurer)
-    plugins.implements(plugins.IRoutes, inherit=True)
-    plugins.implements(plugins.ITemplateHelpers, inherit=False)
-    plugins.implements(plugins.IDomainObjectModification, inherit=True)
-    def before_map(self, map):
-        map.connect('sign_up','/custom_api/notification/subscribe', action='sign_up', controller='ckanext.notification_api.notification:NotificationController')
-        map.connect('unsubscribe','/custom_api/notification/unsubscribe', action='unsubscribe', controller='ckanext.notification_api.notification:NotificationController')
-        
-        return map
-    def get_helpers(self):
-        return {'send_notification': notification.send_notification}
 
-    def update_config(self, config):
-        toolkit.add_template_directory(config, 'templates')
+    plugins.implements(plugins.IActions)
+    plugins.implements(plugins.IConfigurable)
+    plugins.implements(plugins.IDomainObjectModification, inherit=True)
+
+    def get_actions(self):
+        return {'notification_subscribe':notification.subscribe,
+                'notification_unsubscribe': notification.unsubscribe}
+
+    def configure(self, config):
+        self.site_url = config.get('ckan.site_url', 'unknown')
 
     def notify(self, entity, operation=None):
-        context = {'model': model, 'ignore_auth': True}
-        
         if isinstance(entity, model.Resource):
             if not operation:
                 return
             elif operation == DomainObjectOperation.changed:
-                logging.warning('\n\n\n\n\n\n')
-                logging.warning(entity.id)
-                logging.warning('\n\n\n\n\n\n')
-                notification.send_notification(entity.id, 'updated')
+                log.info('Resource edited: %s', entity.id)
+                self._create_task(entity.id, 'updated')
             elif operation == DomainObjectOperation.deleted:
-                logging.warning(entity)
-                notification.send_notification(entity.id, 'deleted')
+                log.info('Resource deleted: %s', entity.id)
+                self._create_task(entity.id, 'deleted')
+
+    def _create_task(self, entity_id, status):
+        receivers = notification.get_dataset_followers(entity_id)
+        celery.send_task("notification_api.send", args=[receivers, self.site_url, entity_id, status], task_id=str(uuid.uuid4()))
