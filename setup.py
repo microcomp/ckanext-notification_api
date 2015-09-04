@@ -27,5 +27,7 @@ setup(
         notification_api=ckanext.notification_api.plugin:NotificationApiPlugin
         [ckan.celery_task]
         tasks = ckanext.notification_api.celery_import:task_imports
+        [paste.paster_command]
+        notification-cmd = ckanext.notification_api.notification_api_cmd:NotificationCmd
     ''',
 )

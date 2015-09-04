@@ -20,11 +20,11 @@ class NotificationApiPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IDomainObjectModification, inherit=True)
 
     def get_actions(self):
-        return {'sign_up':notification.sign_up,
-                'unsubscribe': notification.unsubscribe}
+        return {'notification_subscribe':notification.subscribe,
+                'notification_unsubscribe': notification.unsubscribe}
 
     def configure(self, config):
-        self.site_url = config.get('site_url', 'unknown')
+        self.site_url = config.get('ckan.site_url', 'unknown')
 
     def notify(self, entity, operation=None):
         if isinstance(entity, model.Resource):

@@ -1,12 +1,9 @@
-import datetime
 import uuid
 import logging
 
-import ckan.model as model
 from ckan.model import domain_object
 from ckan.model.meta import metadata, Session, mapper
 from sqlalchemy import types, Column, Table, ForeignKey, func, CheckConstraint
-from pylons import session
 
 log = logging.getLogger(__name__)
 

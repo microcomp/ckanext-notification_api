@@ -17,14 +17,18 @@ def send_notification(receivers, site_url, entity_id, status):
             'address': receiver['address'],
             'ckan': site_url,
             'topic': entity_id,
-            'user_ref': receiver['user_id'],
+            'user_ref': receiver['user'],
             'status' : status
         }
         log.info('post request to %s', receiver['address'])
-        requests.post(receiver['address'], headers={
-                'Content-Type': 'application/json'
-            },
-            data=json.dumps(payload),
-            timeout=5
-        )
-        log.info('post request sent')
+        try:
+            requests.post(receiver['address'], headers={
+                    'Content-Type': 'application/json'
+                },
+                data=json.dumps(payload),
+                timeout=5
+            )
+            log.info('post request sent')
+        except requests.exceptions.ConnectionError as e:
+            log.info('Connection failed to url %s', receiver['address'])
+        
