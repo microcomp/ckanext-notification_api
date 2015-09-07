@@ -45,9 +45,9 @@ For this purpose you need to send POST request to endpoint /api/3/action/notific
 
 If the response looks like the JSON below, the subscription was successful.
 ```json
-{....
+{ ...
  "success" : true,
- ...}
+  ... }
 ```
 
 Unsubscribe notification of given resource id and url.
@@ -59,9 +59,9 @@ For this purpose you need to send POST request to endpoint /api/3/action/notific
 
 If the response looks like the JSON below, the subscription was successful.
 ```json
-{....
+{ ...
  "success" : true,
- ...}
+  ... }
 ```
 
 License
