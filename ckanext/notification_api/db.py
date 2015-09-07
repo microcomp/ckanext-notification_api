@@ -3,7 +3,7 @@ import logging
 
 from ckan.model import domain_object
 from ckan.model.meta import metadata, Session, mapper
-from sqlalchemy import types, Column, Table, ForeignKey, func, CheckConstraint
+from sqlalchemy import types, Column, Table, UniqueConstraint
 
 log = logging.getLogger(__name__)
 
@@ -11,13 +11,13 @@ def make_uuid():
     return unicode(uuid.uuid4())
 
 class NotificationApi(domain_object.DomainObject):
-    def __init__(self, dataset_id, user_id, ip_address, status=None):
-        assert dataset_id
+    def __init__(self, entity_id, user_id, url, status=None):
+        assert entity_id
         assert user_id
-        assert ip_address
-        self.dataset_id = dataset_id
+        assert url
+        self.entity_id = entity_id
         self.user_id = user_id
-        self.ip_address = ip_address
+        self.url = url
         if status:
             self.status = status
 
@@ -29,10 +29,11 @@ class NotificationApi(domain_object.DomainObject):
 
 notification_table = Table('notification_api', metadata,
         Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
-        Column('dataset_id', types.UnicodeText, default=u'', nullable=False),
+        Column('entity_id', types.UnicodeText, default=u'', nullable=False),
         Column('user_id', types.UnicodeText, default=u'', nullable=False),
-        Column('ip_address', types.UnicodeText, default=u'', nullable=False),
-        Column('status', types.UnicodeText, default=u'active', nullable=False)
+        Column('url', types.UnicodeText, default=u'', nullable=False),
+        Column('status', types.UnicodeText, default=u'active', nullable=False),
+        UniqueConstraint('entity_id', 'url', name='uix_1')
     )
 
 mapper(NotificationApi, notification_table)

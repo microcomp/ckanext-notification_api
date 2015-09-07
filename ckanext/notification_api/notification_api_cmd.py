@@ -3,7 +3,7 @@ import logging
 
 from ckan.lib.cli import CkanCommand
 
-log = logging.getLogger('ckanext')
+log = logging.getLogger('ckanext)
 log.setLevel(logging.DEBUG)
 
 
@@ -45,3 +45,11 @@ class NotificationCmd(CkanCommand):
                     send_notification(res, site_url, entity.dataset_id, 'changed')
             else:
                 log.info("table doesnt exist")
+                
+        if cmd == 'uninstall':
+            log.info('Starting DB uninstall')
+            if notification_table.exists():
+                log.info('dropping table notification_api')
+                notification_table.drop()
+                log.info('table notification_api successfully dropped')
+            
