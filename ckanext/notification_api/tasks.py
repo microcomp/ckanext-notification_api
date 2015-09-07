@@ -13,10 +13,10 @@ def send_notification(receivers, site_url, entity_id, status):
     log.info('Firing webhooks for {0}'.format(entity_id))
     for receiver in receivers:
         payload = {
-            'entity': 'dataset',
+            'entity': 'resource',
             'address': receiver['address'],
             'ckan': site_url,
-            'topic': entity_id,
+            'entity_id': entity_id,
             'user_ref': receiver['user'],
             'status' : status
         }

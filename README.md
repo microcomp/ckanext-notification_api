@@ -64,6 +64,19 @@ If the response looks like the JSON below, the subscription was successful.
   ... }
 ```
 
+When the change occures, the notificatin will be sent to the registred url.
+Notification is a POST request in the following form:
+
+```bash
+POST / HTTP/1.1
+Host: <url>
+Content-Type: application/json
+Accept-Encoding: gzip, deflate, compress
+
+{"status": "updated", "entity": "resource", "entity_id": "<entity_id>", "address": "<url>", "user_ref": "<user_id>", "ckan": "<ckan site url>"}
+```
+
+
 License
 -------
 
