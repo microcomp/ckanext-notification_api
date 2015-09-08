@@ -3,7 +3,7 @@ import logging
 
 from ckan.lib.cli import CkanCommand
 
-log = logging.getLogger('ckanext)
+log = logging.getLogger('ckanext')
 log.setLevel(logging.DEBUG)
 
 
@@ -41,8 +41,8 @@ class NotificationCmd(CkanCommand):
                 results = NotificationApi.get(**search)
                 res = []
                 for entity in results:
-                    res.append({'address' : entity.ip_address, 'user' : entity.user_id })
-                    send_notification(res, site_url, entity.dataset_id, 'changed')
+                    res.append({'address' : entity.url, 'user' : entity.user_id })
+                    send_notification(res, site_url, entity.entity_id, 'changed')
             else:
                 log.info("table doesnt exist")
                 
