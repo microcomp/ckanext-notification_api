@@ -11,6 +11,7 @@ log = logging.getLogger(__name__)
 @celery.task(name = "notification_api.send")
 def send_notification(receivers, site_url, entity_id, status):
     log.info('Firing webhooks for {0}'.format(entity_id))
+    log.info(receivers)
     for receiver in receivers:
         payload = {
             'entity': 'resource',
